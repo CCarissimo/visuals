@@ -42,7 +42,7 @@ class BraessNetwork(MovingCameraScene):
         )
         self.wait(1)
 
-        n_agents = 30
+        n_agents = 20
         agents = [Square(side_length=0.3, color=BLUE, fill_opacity=0.5) for i in range(n_agents)]
         start_points = [np.array([-10, y, 0]) for y in np.linspace(-8, 8, n_agents)]
         end_points = [np.array([10, y, 0]) for y in np.linspace(-8, 8, n_agents)]
@@ -73,3 +73,45 @@ class BraessNetwork(MovingCameraScene):
         self.wait(1)
         self.play([agent.animate.move_to(start_points[i]) for i, agent in enumerate(agents)], run_time=0.5)
         self.wait(1)
+
+        # Q table
+
+        q_table_values = np.round(np.random.random((n_agents, 3)) + 1, decimals=1)
+        q_table_argmax = q_table_values.argmax(axis=1)
+
+        q_table = MathTable(
+            q_table_values,
+            include_outer_lines=True).scale(0.7)
+
+        q_table.move_to(np.array([-10,0,0]))
+
+        g1 = Group(*agents)
+
+        self.play(Transform(g1, q_table))
+        self.wait(1)
+
+        highlights = []
+        colors = [GREEN, BLUE, RED]
+        for i in range(n_agents):
+            action = q_table_argmax[i]
+            highlight = q_table.add_highlighted_cell((i,action), color=colors[action])
+            highlights.append(highlight)
+
+        q_table_highlighted = Group(q_table, *highlights)
+
+        self.play(Transform(q_table, q_table_highlighted))
+
+        # self.play(q_table.animate(), run_time=1)
+        self.wait(1)
+
+        agents = [Square(side_length=0.3, color=colors[q_table_argmax[i]], fill_opacity=0.5) for i in range(n_agents)]
+        
+        for i, agent in enumerate(agents):
+            agent.move_to(start_points[i])
+
+        g2 = Group(*agents)
+
+        self.play(Transform(q_table_highlighted, g2))
+
+        self.wait(1)
+
