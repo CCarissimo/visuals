@@ -3,9 +3,9 @@ from manim import *
 
 class DefaultTemplate(Scene):
     def construct(self):
-        table = Matrix([["Q_a", "Q_b", "Q_c"]])
+        table = Matrix([["Q_a", "Q_b", "Q_c"]]).set_color(BLACK)
 
-        square = Square()  # create a square
+        square = Square().set_color(BLACK)  # create a square
         # square.flip(RIGHT)  # flip horizontally
         # square.rotate(-3 * TAU / 8)  # rotate a certain amount
 

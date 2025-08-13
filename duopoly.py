@@ -28,21 +28,20 @@ class Duopoly(MovingCameraScene):
         self.add(agent1)
         self.add(agent2)
 
-        # self.play(
-        #     self.camera.frame.animate.set_width(30)
-        # )
-        # self.wait(1)
+        # Add text above the agents, "Agent 1" and "Agent 2"
+        agent1_text = Text("Agent 1", font_size=24, color=BLACK).next_to(agent1, UP)
+        agent2_text = Text("Agent 2", font_size=24, color=BLACK).next_to(agent2, UP)
+        self.play(Write(agent1_text), Write(agent2_text))
+        self.wait(1)
 
-        # Q table
+        # q_table_values = np.round(np.random.random((2, 3)) + 1, decimals=1)
+        # q_table_argmax = q_table_values.argmax(axis=1)
 
-        q_table_values = np.round(np.random.random((2, 3)) + 1, decimals=1)
-        q_table_argmax = q_table_values.argmax(axis=1)
+        # q_table = MathTable(
+        #     q_table_values,
+        #     include_outer_lines=True).scale(0.7)
 
-        q_table = MathTable(
-            q_table_values,
-            include_outer_lines=True).scale(0.7)
-
-        q_table.move_to(np.array([-10,0,0]))
+        # q_table.move_to(np.array([-10,0,0]))
 
         axes = Axes(
             x_range=[0, 10, 1],
@@ -57,7 +56,22 @@ class Duopoly(MovingCameraScene):
         ).scale(0.5)
         axes_labels = axes.get_axis_labels()
 
-        demand_curve = axes.plot(lambda x: 10-x, color=YELLOW)
+        # Add the label "price" to the y-axis, cenetered on the y-axis
+        # set color to BLACK
+        price_label = axes.get_y_axis_label("price", edge=UP, direction=LEFT, buff=0.2)
+        axes_labels.add(price_label)
+        axes_labels.set_color(BLACK)
+        axes_labels.set_stroke(BLACK, 1)
+
+        # Add the label "quantity" to the x-axis
+        quantity_label = axes.get_x_axis_label("quantity", edge=RIGHT, direction=DOWN, buff=0.2)
+        axes_labels.add(quantity_label)
+        axes_labels.set_color(BLACK)
+        axes_labels.set_stroke(BLACK, 1)
+        
+        # Create the demand curve
+
+        demand_curve = axes.plot(lambda x: 10-x, color=BLACK)
         demand_label = axes.get_graph_label(
             demand_curve, "demand", x_val=8, direction=3*UP
         )
@@ -77,36 +91,66 @@ class Duopoly(MovingCameraScene):
         print(prices)
 
         def get_player1_rectangle():
-            polygon = Polygon(
-                *[
-                    axes.c2p(*i)
-                    for i in self.get_rectangle_corners(
-                        (0, 0), (10 - p1.get_value(), p1.get_value())
+            if p1.get_value() == p2.get_value():
+                # if both prices are equal, create two rectangles side by side
+                if p1.get_value() == p2.get_value():
+                    # if both prices are equal, create two rectangles side by side
+                    polygon = Polygon(
+                        *[
+                            axes.c2p(*i)
+                            for i in self.get_rectangle_corners(
+                                (0, 0), ((10 - p1.get_value())/2, p1.get_value())
+                            )
+                        ]
                     )
-                ]
-            )
-            polygon.stroke_width = 1
-            if p1.get_value() < p2.get_value():
-                polygon.set_fill(BLUE, opacity=0.8)
+                    polygon.stroke_width = 1
+                    polygon.set_fill(BLUE, opacity=0.8)
+
             else:
-                polygon.set_fill(BLUE, opacity=0.3)
+                polygon = Polygon(
+                    *[
+                        axes.c2p(*i)
+                        for i in self.get_rectangle_corners(
+                            (0, 0), (10 - p1.get_value(), p1.get_value())
+                        )
+                    ]
+                )
+                polygon.stroke_width = 1
+                if p1.get_value() < p2.get_value():
+                    polygon.set_fill(BLUE, opacity=0.8)
+                else:
+                    polygon.set_fill(BLUE, opacity=0.1)
             polygon.set_stroke(YELLOW_B)
             return polygon
         
         def get_player2_rectangle():
-            polygon = Polygon(
-                *[
-                    axes.c2p(*i)
-                    for i in self.get_rectangle_corners(
-                        (0, 0), (10 - p2.get_value(), p2.get_value())
-                    )
-                ]
-            )
-            polygon.stroke_width = 1
-            if p1.get_value() > p2.get_value():
+            if p1.get_value() == p2.get_value():
+                # if both prices are equal, create two rectangles side by side
+                polygon = Polygon(
+                    *[
+                        axes.c2p(*i)
+                        for i in self.get_rectangle_corners(
+                            ((10 - p2.get_value())/2, 0), (10 - p2.get_value(), p2.get_value())
+                        )
+                    ]
+                )
+                polygon.stroke_width = 1
                 polygon.set_fill(RED, opacity=0.8)
+            
             else:
-                polygon.set_fill(RED, opacity=0.3)
+                polygon = Polygon(
+                    *[
+                        axes.c2p(*i)
+                        for i in self.get_rectangle_corners(
+                            (0, 0), (10 - p2.get_value(), p2.get_value())
+                        )
+                    ]
+                )
+                polygon.stroke_width = 1
+                if p1.get_value() > p2.get_value():
+                    polygon.set_fill(RED, opacity=0.8)
+                else:
+                    polygon.set_fill(RED, opacity=0.1)
             polygon.set_stroke(YELLOW_B)
             return polygon
         
@@ -121,10 +165,53 @@ class Duopoly(MovingCameraScene):
         self.play(p2.animate.set_value(3))
         self.wait(1)
 
+        # Prices compete to Nash Equilibrium
+        self.play(p1.animate.set_value(3))
+        self.play(p2.animate.set_value(3))
+        self.wait(1)
+        self.play(p1.animate.set_value(3))
+        self.play(p2.animate.set_value(2))
+        self.wait(1)
+        self.play(p1.animate.set_value(1))
+        self.play(p2.animate.set_value(2))
+        self.wait(1)
+        self.play(p1.animate.set_value(1))
+        self.play(p2.animate.set_value(1))
+        self.wait(1)
+
+        # Add text below the graph
+        nash_equilibrium = Text("Nash Equilibrium: prices = 1", font_size=36, color=BLACK).next_to(axes, DOWN, buff=1)
+        self.play(FadeIn(nash_equilibrium))
+        self.wait(2)
+        self.play(FadeOut(nash_equilibrium))
+
+        # Prices collude at Monopoly Price
+        self.play(p1.animate.set_value(3))
+        self.play(p2.animate.set_value(1))
+        self.wait(1)
+        self.play(p1.animate.set_value(3))
+        self.play(p2.animate.set_value(3))
+        self.wait(1)
+        self.play(p1.animate.set_value(4))
+        self.play(p2.animate.set_value(4))
+        self.wait(1)
+        self.play(p1.animate.set_value(5))
+        self.play(p2.animate.set_value(5))
+        self.wait(1)
+
+        # Add text below the graph
+        monopoly_price = Text("Monopoly price: maximum profit", font_size=36, color=BLACK).next_to(axes, DOWN, buff=1)
+        self.play(FadeIn(monopoly_price))
+        self.wait(2)
+        self.play(FadeOut(monopoly_price))
+
+        # Prices oscillate in Edgeworth Cycle
+        # Add text below the graph
+        edgeworth_cycle = Text("Edgeworth Cycle: prices oscillate", font_size=36, color=BLACK).next_to(axes, DOWN, buff=1)
+        self.play(FadeIn(edgeworth_cycle))
         for price1, price2 in prices:
             # self.play([p1.animate.set_value(price1), p2.animate.set_value(price2)])
             self.play(p1.animate.set_value(price1))
             self.play(p2.animate.set_value(price2))
             self.wait(0.5)
-        
         

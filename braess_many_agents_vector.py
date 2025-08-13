@@ -80,10 +80,10 @@ class BraessNetwork(MovingCameraScene):
         q_table_values = np.round(np.random.random((n_agents, 3)) + 1, decimals=1)
         q_table_argmax = q_table_values.argmax(axis=1)
 
-        q_vectors = [Matrix([["Q_a", "Q_b", "Q_c"]], color=BLACK) for i in range(n_agents)]
-        
+        q_vectors = [Matrix([["Q_a", "Q_b", "Q_c"]]) for i in range(n_agents)]
+
         for i, vec in enumerate(q_vectors):
-            vec.move_to(start_points[i])
+            vec.move_to(start_points[i]).set_color(BLACK)
 
         # g1 = Group(*agents)
 
@@ -103,9 +103,9 @@ class BraessNetwork(MovingCameraScene):
             color_animations.append(color_ani)
 
         self.play(AnimationGroup(*color_animations, lag_ratio=0.05, run_time=1.5))
-        
+
         agents = [Square(side_length=0.3, color=colors[q_table_argmax[i]], fill_opacity=0.5) for i in range(n_agents)]
-        
+
         new_start_points = [np.array([-7, y, 0]) for y in np.linspace(-8, 8, n_agents)]
 
         for i, agent in enumerate(agents):
